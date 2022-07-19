@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v6.js"></script>
+<script src="files.js"></script>
+<script src="keys.js"></script>
+<style>
+	.buttons{
+		margin:10px;
+		padding:10px;
+		border:1px solid black;
+	}
+	#info{
+		position:absolute;
+		width:300px;
+		background-color:rgba(255,255,255,.8);
+	}
+</style>
+
+% Employment
+<!-- Create a div where the graph will take place -->
+<div id="buttons"></div>
+<div id="key"></div>
+<div id="my_dataviz"></div>
+<div id="info"></div>
+<script>
+
+var keysInUse = ['numkidsundersix82',"educ92","marstat76","female76", "raceeth76"]
+
+var colors = ["#cf77ad","#00347B","#E62790","#249EDC","#00906E","#6929c4","#20659d"]
+	
+
+for(var k in keysInUse){
+	d3.select("#buttons").append("div").style("display","inline-block")
+	.attr("class","buttons")
+	.attr("id",keysInUse[k])
+	.html(keysInUse[k])
+	.attr("cursor","pointer")
+	.on("click",function(){
+		d3.selectAll(".keyItem").remove()
+		var id = d3.select(this).attr("id")
+		var activeKeys = keysDict[id]
+		for(var a in activeKeys){
+			var activeKey = "_"+activeKeys[a].split(" ").join("_").toLowerCase()
+			var color = colors[a]
+			//console.log(activeKey,color)
+			d3.selectAll("."+activeKey).style("stroke",color)
+			var keyColor = d3.select("#key").append("div")			
+			.attr("class","keyItem")
+
+			keyColor.append('div').style("width","20px").style("height","20px").style("background-color",color)
+			.style("display","inline-block")
+			keyColor.append('div').attr("height",50).html(activeKey)
+			.style("display","inline-block")
+		}
+		
+	})
+}
+
+// set the dimensions and margins of the graph
+const margin = {top: 10, right: 30, bottom: 30, left: 60},
+    width = 1400 - margin.left - margin.right,
+    height = 800 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+const svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+	
+	//open list of data, make promises
+	//draw line for each - small multiples for % employment
+	//draw on top of same line
+	
+	var promises = []
+	var root = "combinations_3_counts/"
+	for(var f in files){
+		//console.log(f)
+		promises.push(d3.json(root+files[f]))
+	}
+	
+//console.log(promises)
+  const y = d3.scaleLinear()
+    .domain([0, 1])
+    .range([ height, 0 ]);
+
+  svg.append("g")
+    .call(d3.axisLeft(y));
+	
+	
+var x = d3.scaleTime()
+      .domain([d3.timeParse("%Y-%m-%d")("1994-01-01"),d3.timeParse("%Y-%m-%d")("2022-05-01")])
+      .range([ 0, width ]);
+	  
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+	
+//Read the data
+	Promise.all(promises)
+//d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv",
+.then(
+  // Now I can use this dataset:
+  function(data) {
+	  //console.log(data)
+	//console.log(d3.timeParse("%Y-%m-%d")("1994-01-01"))
+	  
+	  for(var i in data){
+		  var label = files[i]
+		  drawChart(data[i],label)
+		 // break
+	  }
+    
+
+})
+function drawChart(data,label){
+	var classes = ""
+	var labelList = label.split("_")
+	for(var l in labelList){
+		var className = "_"+labelList[l].split(" ").join("_").split(",").join("").split(".")[0]
+		classes+=className+" "
+	}
+	console.log(classes)
+  // Add Y axis
+	var keys = Object.keys(data).sort(function(a,b){
+		return d3.timeParse("%Y-%m-%d")(a)-d3.timeParse("%Y-%m-%d")(b)
+	})
+ 
+
+  // Add the line
+  svg.append("path")
+    .datum(keys)
+    .attr("fill", "none")
+    .attr("stroke", function(){
+		
+    	return "#000"
+    })
+	.attr("opacity",.1)
+    .attr("stroke-width", 3)
+	.attr("class",classes)
+    .attr("d", d3.line()
+      .x(function(d,i) { return x(d3.timeParse("%Y-%m-%d")(d)) })
+      .y(function(d,i) { 
+		  var entry = data[d]
+		  var total = entry["Not in labor force"]+entry["Employed"]+entry["Unemployed"]
+		//  console.log(entry["Employed"],total)
+		  var percent = entry["Employed"]/total
+		  //console.log(percent); 
+		  return y(percent)
+	  })
+	  .curve(d3.curveCardinal)
+      ).on("mouseover",function(){
+		  var x = event.clientX+20;     // Get the horizontal coordinate
+		  var y = event.clientY;   
+		  d3.select("#info").style("left",x+"px").style("top",y+"px")
+	d3.select(this).attr("opacity",1)
+			  d3.select("#info").html(label)
+		 // console.log(label)
+	  })
+	  .on("mouseout",function(){
+	d3.select(this).attr("opacity",.1)
+	  	
+	  }
+	  )
+}
+</script>

@@ -1,0 +1,61 @@
+	body{
+		font-size:16px;
+		font-family: 'Open Sans', sans-serif;
+		font-weight:100;
+	}
+	p{
+		width:400px;
+	}
+	#popup{
+		position:fixed;
+		background-color:rgba(255,255,255,.8);
+		border:1px solid black;
+		font-size:11px;
+		padding:10px;
+		display:none;
+		z-index:3;
+	}
+	#key{
+		font-size:12px;
+		display:inline-block;
+		margin:10px;
+	}
+	#grad {
+		display:inline-block;
+		width:400px;
+		height:10px;
+		padding-bottom:5px;
+	  background-image: linear-gradient(90deg, magenta, #fff,cyan);
+    text-align: center;
+     text-justify: inter-word;
+}
+#info{
+	border-bottom:1px solid black;
+	position:fixed;
+	width:100%;
+	background-color:#fff;
+	z-index:2;
+	top:0px;
+	left:0px;
+	padding:10px;
+}
+#charts{
+	margin-top:100px;
+	position:absolute;
+	z-index:1;
+	font-size:12px;
+}
+.quarter{
+	width:800px;
+}
+.qButton{
+	display:inline-block;
+	width:200px;
+	border:1px solid black;
+	padding:3px;
+	text-align:center;
+	cursor:pointer;
+}
+.map{
+	display:inline-block;
+}
